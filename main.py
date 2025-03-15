@@ -42,8 +42,8 @@ def delete_hotel(hotel_id: int):
 @app.patch('/edit-hotels/{hotel_id}')
 def part_update_hotel(
         hotel_id: int,
-        title: str | None = Query(None, description=str_name),
-        name: str | None = Query(None, description=str_full_name)):
+        title: str | None = Body(None, description=str_name),
+        name: str | None = Body(None, description=str_full_name)):
 
     return update_hotel(hotel_id, title, name)
 
@@ -51,8 +51,8 @@ def part_update_hotel(
 @app.put('/full-edit-hotels/{hotel_id}')
 def full_update_hotel(
         hotel_id: int,
-        title: str = Query(description=str_name),
-        name: str = Query(description=str_full_name)):
+        title: str = Body(description=str_name),
+        name: str = Body(description=str_full_name)):
     return update_hotel(hotel_id, title, name)
 
 
@@ -62,9 +62,9 @@ def update_hotel(
         name: str):
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            if title:
+            if title is not None:
                 hotel['title'] = title
-            if name:
+            if name is not None:
                 hotel['name'] = name
     return {'status': f'datas in Hotel #{hotel_id} are updated'}
 
