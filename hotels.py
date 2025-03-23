@@ -1,5 +1,9 @@
-from fastapi import Body, APIRouter
-from shemas.schem_hotels import Hotel, HotelPATCH
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
+from schemas.schem_hotels import Hotel, HotelPATCH
+
+from dependency import PaginationDep
 
 hotels = [
     {'id': 1, 'title': 'Сочи', 'name': 'отель Сочи'},
@@ -18,11 +22,10 @@ router = APIRouter(prefix='/hotels', tags=['Отели'])
 
 @router.get('')
 def get_hotels(
-        page: int = 1,
-        per_page: int = 3,
+        pagination: PaginationDep,
 ):
-    start = (page - 1) * per_page
-    end = start + per_page
+    start = (pagination.page - 1) * pagination.per_page
+    end = start + pagination.per_page
 
     return [hotel for hotel in hotels[start:end]]
 
