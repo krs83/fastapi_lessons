@@ -1,9 +1,9 @@
-from typing import Annotated
 
-from fastapi import APIRouter, Depends
-from schemas.schem_hotels import Hotel, HotelPATCH
+from fastapi import APIRouter
 
-from dependency import PaginationDep
+from src.api.dependency import PaginationDep
+from src.schemas.schem_hotels import Hotel, HotelPATCH
+
 
 hotels = [
     {'id': 1, 'title': 'Сочи', 'name': 'отель Сочи'},
