@@ -9,3 +9,4 @@ src/migrations/versions/__pycache__/
 *.pyc
 __pycache__/
 .env
+backend_kurs.iml
