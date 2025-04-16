@@ -6,4 +6,6 @@ src/schemas/__pycache__/
 src/models/__pycache__/
 src/migrations/__pycache__/
 src/migrations/versions/__pycache__/
+*.pyc
+__pycache__/
 .env
