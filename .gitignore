@@ -4,4 +4,5 @@ src/__pycache__/
 src/api/__pycache__/
 src/schemas/__pycache__/
 src/models/__pycache__/
+src/migrations/__pycache__/
 .env

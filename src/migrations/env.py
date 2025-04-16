@@ -8,6 +8,7 @@ from alembic import context
 from src.config import settings
 from src.database import Base
 from src.models.m_hotels import HotelsOrm
+from src.models.m_rooms import RoomsOrm
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
