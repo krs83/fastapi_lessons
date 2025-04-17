@@ -2,7 +2,10 @@
 from fastapi import APIRouter
 
 from src.api.dependency import PaginationDep
+from src.models.m_hotels import HotelsOrm
 from src.schemas.schem_hotels import Hotel, HotelPATCH
+from sqlalchemy import insert
+from src.database import async_session_maker
 
 
 hotels = [
@@ -31,16 +34,13 @@ def get_hotels(
 
 
 @router.post('')
-def create_hotel(
+async def create_hotel(
         hotel_data: Hotel
 ):
-    hotels.append(
-        {
-            'id': hotels[-1]['id'] + 1,
-            'title': hotel_data.title,
-            'name': hotel_data.name
-        }
-    )
+    async with async_session_maker() as session:
+        add_hotel_stmnt = insert(HotelsOrm).values(**hotel_data.model_dump())
+        await session.execute(add_hotel_stmnt)
+        await session.commit()
     return {'status': f'The hotel {hotel_data.title} has been added'}
 
 
