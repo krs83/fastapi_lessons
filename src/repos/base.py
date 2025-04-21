@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 
 class BaseRepos:
@@ -16,3 +16,8 @@ class BaseRepos:
         query = select(self.model)
         result = await self.session.execute(query).filter_by(by_filters)
         return result.scalars().one_or_none()
+
+    async def add(self, data):
+        add_smth = insert(self.model).values(**data.model_dump())
+        await self.session.execute(add_smth)
+        return {'status': f'{data} has been added'}

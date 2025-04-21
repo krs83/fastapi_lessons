@@ -1,6 +1,6 @@
 from src.models.m_hotels import HotelsOrm
 from src.repos.base import BaseRepos
-from sqlalchemy import select, func
+from sqlalchemy import select, insert, func
 
 
 class HotelsRepos(BaseRepos):
@@ -25,3 +25,9 @@ class HotelsRepos(BaseRepos):
         )
         result = await self.session.execute(query)
         return result.scalars().all()
+
+    async def add(self, hotel_info):
+        add_hotel = insert(self.model).values(**hotel_info.model_dump())
+        await self.session.execute(add_hotel)
+        await self.session.commit()
+        return {'status': f'The hotel {hotel_info.title} has been added'}

@@ -32,10 +32,7 @@ async def create_hotel(
         hotel_data: Hotel
 ):
     async with async_session_maker() as session:
-        add_hotel_stmnt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        await session.execute(add_hotel_stmnt)
-        await session.commit()
-    return {'status': f'The hotel {hotel_data.title} has been added'}
+        return await HotelsRepos(session).add(hotel_data)
 
 
 @router.delete('/{hotel_id}')
