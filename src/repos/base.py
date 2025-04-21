@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from sqlalchemy import select, insert
 
 
@@ -17,7 +18,7 @@ class BaseRepos:
         result = await self.session.execute(query).filter_by(by_filters)
         return result.scalars().one_or_none()
 
-    async def add(self, data):
+    async def add(self, data: BaseModel):
         add_smth = insert(self.model).values(**data.model_dump())
         await self.session.execute(add_smth)
         return {'status': f'{data} has been added'}
