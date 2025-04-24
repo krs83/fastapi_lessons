@@ -43,16 +43,16 @@ class HotelsRepos(BaseRepos):
 
         return {'status': f' The hotel by id #{hotel_id} has been deleted'}
 
-    async def edit(self, hotel_id, data: BaseModel):
+    async def edit(self, hotel_id, data: BaseModel, unset: bool = False):
         await self.checking(hotel_id)
         stmt = (
             update(self.model)
             .where(self.model.id == hotel_id)
-            .values(data.model_dump())
+            .values(data.model_dump(exclude_unset=unset))
         )
         await self.session.execute(stmt)
         await self.session.commit()
-        return {'status': f'datas in Hotel #{hotel_id} are fully updated'}
+        return {'status': f'datas in Hotel #{hotel_id} are updated'}
 
     async def checking(self, hotel_id):
         stmt = select(self.model).where(self.model.id == hotel_id)
