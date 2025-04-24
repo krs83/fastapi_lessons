@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, delete, update
 
 
 class BaseRepos:
@@ -22,3 +22,17 @@ class BaseRepos:
         add_smth = insert(self.model).values(**data.model_dump())
         await self.session.execute(add_smth)
         return {'status': f'{data} has been added'}
+
+    async def edit(self, id, data: BaseModel,):
+        stmt = (
+                update(self.model)
+                .where(self.model)
+                .values(data.model_dump())
+        )
+        await self.session.execute(stmt)
+        return {'status': f'datas in ___ #{id} are fully updated'}
+
+    async def delete(self, id):
+        stmt = delete(self.model).where(id)
+        await self.session.execute(stmt)
+        return {'status': f'{id} has been deleted'}

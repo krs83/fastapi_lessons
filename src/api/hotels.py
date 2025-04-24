@@ -2,10 +2,8 @@
 from fastapi import APIRouter, Query
 
 from src.api.dependency import PaginationDep
-from src.models.m_hotels import HotelsOrm
 from src.repos.r_hotels import HotelsRepos
 from src.schemas.schem_hotels import Hotel, HotelPATCH
-from sqlalchemy import insert, select, func
 from src.database import async_session_maker
 
 
@@ -36,10 +34,9 @@ async def create_hotel(
 
 
 @router.delete('/{hotel_id}')
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
-    return {'status': f'The hotel #{hotel_id} has been deleted'}
+async def delete_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        return await HotelsRepos(session).delete_by_id(hotel_id)
 
 
 @router.patch('/{hotel_id}')
@@ -56,12 +53,10 @@ def part_update_hotel(
 
 
 @router.put('/{hotel_id}')
-def full_update_hotel(
+async def full_update_hotel(
         hotel_id: int,
         hotel_data: Hotel):
-    for hotel in hotels:
-        if hotel['id'] == hotel_id:
-            hotel['title'] = hotel_data.title
-            hotel['name'] = hotel_data.name
-    return {'status': f'datas in Hotel #{hotel_id} are fully updated'}
+    async with async_session_maker() as session:
+        return await HotelsRepos(session).edit(hotel_id=hotel_id,
+                                               data=hotel_data)
 

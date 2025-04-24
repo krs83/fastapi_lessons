@@ -1,6 +1,9 @@
+from fastapi import HTTPException
+from pydantic import BaseModel
+
 from src.models.m_hotels import HotelsOrm
 from src.repos.base import BaseRepos
-from sqlalchemy import select, insert, func
+from sqlalchemy import select, insert, delete, func, update
 
 
 class HotelsRepos(BaseRepos):
@@ -31,3 +34,29 @@ class HotelsRepos(BaseRepos):
         await self.session.execute(add_hotel)
         await self.session.commit()
         return {'status': f'The hotel {hotel_info.title} has been added'}
+
+    async def delete_by_id(self, hotel_id):
+        await self.checking(hotel_id)
+        stmt = delete(self.model).where(self.model.id == hotel_id)
+        await self.session.execute(stmt)
+        await self.session.commit()
+
+        return {'status': f' The hotel by id #{hotel_id} has been deleted'}
+
+    async def edit(self, hotel_id, data: BaseModel):
+        await self.checking(hotel_id)
+        stmt = (
+            update(self.model)
+            .where(self.model.id == hotel_id)
+            .values(data.model_dump())
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return {'status': f'datas in Hotel #{hotel_id} are fully updated'}
+
+    async def checking(self, hotel_id):
+        stmt = select(self.model).where(self.model.id == hotel_id)
+        hotel = await self.session.execute(stmt)
+        hotel = hotel.scalars().one_or_none()
+        if hotel is None:
+            raise HTTPException(status_code=404, detail=f'The Hotel #{hotel_id} is not found!')
