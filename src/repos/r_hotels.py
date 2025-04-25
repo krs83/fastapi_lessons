@@ -29,6 +29,12 @@ class HotelsRepos(BaseRepos):
         result = await self.session.execute(query)
         return result.scalars().all()
 
+    async def get_hotel(self, hotel_id: int):
+        stmt = select(self.model).where(self.model.id == hotel_id)
+        hotel = await self.session.execute(stmt)
+        hotel = hotel.scalars().one()
+        return hotel
+
     async def add(self, hotel_info):
         add_hotel = insert(self.model).values(**hotel_info.model_dump())
         await self.session.execute(add_hotel)

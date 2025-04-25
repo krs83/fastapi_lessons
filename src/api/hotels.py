@@ -25,6 +25,12 @@ async def get_hotels(
                                                   limit=limit)
 
 
+@router.get('/{hotel_id}')
+async def get_hotel(hotel_id: int):
+    async with async_session_maker() as session:
+        return await HotelsRepos(session).get_hotel(hotel_id)
+
+
 @router.post('')
 async def create_hotel(
         hotel_data: Hotel
