@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Request
 from sqlalchemy.exc import IntegrityError
 
 from src.repos.r_users import UsersRepos
@@ -36,3 +36,11 @@ async def login_users(data: UsersRequestAdd,
         access_token = AuthService().create_access_token({'user_id': user.id})
         response.set_cookie('access_token', access_token)
         return {'access_token': access_token}
+
+
+@router.get('/only_auth')
+async def only_auth(request: Request):
+    access_token = request.cookies
+    if access_token:
+        return {'Your token is': access_token}
+    return {'Status': 'The user is not authorized'}
