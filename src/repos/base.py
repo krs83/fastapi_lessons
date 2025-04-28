@@ -15,8 +15,9 @@ class BaseRepos:
         return [self.schema.model_validate(model) for model in result.scalars().all()]
 
     async def get_one_or_none(self, **by_filters):
-        query = select(self.model)
-        result = await self.session.execute(query).filter_by(by_filters)
+        query = select(self.model).filter_by(**by_filters)
+        result = await self.session.execute(query)
+        await self.session.commit()
         model = result.scalars().one_or_none()
         if model is None:
             return None
