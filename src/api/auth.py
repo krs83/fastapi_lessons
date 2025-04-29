@@ -27,7 +27,6 @@ async def register_users(data: UsersRequestAdd):
 @router.post('/login')
 async def login_users(data: UsersRequestAdd,
                       response: Response):
-
     async with async_session_maker() as session:
         user = await UsersRepos(session).get_user_with_hashed_password(email=data.email)
         if not user:
@@ -45,3 +44,8 @@ async def get_me(user_id: UserIdDep):
         user = await UsersRepos(session).get_one_or_none(id=user_id)
         return user
 
+
+@router.post('/logout')
+async def logout(response: Response):
+    response.delete_cookie('access_token')
+    return {'Status': 'You are logged out! See you later!'}
