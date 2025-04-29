@@ -40,7 +40,11 @@ async def login_users(data: UsersRequestAdd,
 
 @router.get('/only_auth')
 async def only_auth(request: Request):
-    access_token = request.cookies
+    access_token = request.cookies.get('access_token')
     if access_token:
-        return {'Your token is': access_token}
+        data = AuthService().decode_token(token=access_token)
+        user_id = data['user_id']
+        async with async_session_maker() as session:
+            user = await UsersRepos(session).get_one_or_none(id=user_id)
+            return user
     return {'Status': 'The user is not authorized'}
