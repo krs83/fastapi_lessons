@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, insert, delete, update
 
@@ -30,7 +31,7 @@ class BaseRepos:
         model = res.scalars().one()
         return self.schema.model_validate(model, from_attributes=True)
 
-    async def edit(self, id, data: BaseModel,):
+    async def edit(self, hotel_id, room_id, data: BaseModel,):
         stmt = (
                 update(self.model)
                 .where(self.model)
@@ -39,7 +40,14 @@ class BaseRepos:
         await self.session.execute(stmt)
         return {'status': f'datas in ___ #{id} are fully updated'}
 
-    async def delete(self, id):
-        stmt = delete(self.model).where(id)
+    async def delete(self, **filter_by):
+        stmt = delete(self.model).filter_by(**filter_by)
         await self.session.execute(stmt)
-        return {'status': f'{id} has been deleted'}
+        return {'status': f'{filter_by} has been deleted'}
+
+    async def checking(self, data_id: int):
+        stmt = select(self.model).filter(self.model.id == data_id)
+        data = await self.session.execute(stmt)
+        data = data.scalars().one_or_none()
+        if data is None:
+            raise HTTPException(status_code=404, detail=f'The data is not found!')
