@@ -1,66 +1,73 @@
 from fastapi import APIRouter
 
-from src.database import async_session_maker
-from src.repos.r_rooms import RoomsRepos
 from src.schemas.schem_rooms import RoomsPatch, RoomsAdd, RoomsPut
+from src.api.dependency import DBDep
 
 router = APIRouter(prefix='/hotels', tags=['Номера'])
 
 
 @router.get('/all/rooms')
 async def get_all_rooms(
+        db: DBDep,
         title: str | None = None,
         description: str | None = None,
         price: int | None = None,
         quantity: int | None = None
 ):
-    async with (async_session_maker() as session):
-        return await RoomsRepos(session).get_all(title=title,
-                                                 description=description,
-                                                 price=price,
-                                                 quantity=quantity)
+    return await db.rooms.get_all(title=title,
+                                  description=description,
+                                  price=price,
+                                  quantity=quantity)
 
 
 @router.get('/{hotel_id}/rooms')
-async def get_rooms_from_hotel(hotel_id: int):
-    async with async_session_maker() as session:
-        return await RoomsRepos(session).get_hotel_rooms(hotel_id)
+async def get_rooms_from_hotel(hotel_id: int,
+                               db: DBDep):
+    return await db.rooms.get_hotel_rooms(hotel_id)
 
 
 @router.post('/{hotel_id}/rooms')
 async def create_rooms(
+        db: DBDep,
         room_data: RoomsAdd
 ):
-    async with async_session_maker() as session:
-        return await RoomsRepos(session).add(room_data)
+    await db.rooms.add(room_data)
+    await db.commit()
+    return room_data
 
 
 @router.delete('/{hotel_id}/rooms/{rooms_id}')
 async def delete_rooms(hotel_id: int,
+                       db: DBDep,
                        rooms_id: int):
-    async with async_session_maker() as session:
-        return await RoomsRepos(session).delete_room(hotel_id, rooms_id)
+    await db.rooms.delete_room(hotel_id, rooms_id)
+    await db.commit()
+    return {'status': f'The room with id #{rooms_id} in hotel #{hotel_id} has been deleted'}
 
 
 @router.put('/{hotel_id}/rooms/{rooms_id}')
 async def full_update_hotel_room(
         hotel_id: int,
+        db: DBDep,
         rooms_id: int,
         room_data: RoomsPut):
-    async with async_session_maker() as session:
-        return await RoomsRepos(session).edit(hotel_id=hotel_id,
-                                              rooms_id=rooms_id,
-                                              data=room_data,
-                                              unset=False)
+    await db.rooms.edit(hotel_id=hotel_id,
+                        rooms_id=rooms_id,
+                        data=room_data,
+                        unset=False)
+    await db.commit()
+    return {'status': f'room data in Hotel #{hotel_id} are updated'}
 
 
 @router.patch('/{hotel_id}/rooms/{rooms_id}')
 async def part_update_hotel_room(
         hotel_id: int,
+        db: DBDep,
         rooms_id: int,
         room_data: RoomsPatch):
-    async with async_session_maker() as session:
-        return await RoomsRepos(session).edit(hotel_id=hotel_id,
-                                              rooms_id=rooms_id,
-                                              data=room_data,
-                                              unset=True)
+    await db.rooms.edit(hotel_id=hotel_id,
+                        rooms_id=rooms_id,
+                        data=room_data,
+                        unset=True)
+    await db.commit()
+    return {'status': f'room data in Hotel #{hotel_id} are updated'}

@@ -29,14 +29,12 @@ class RoomsRepos(BaseRepos):
         result = await self.session.execute(query)
         return [Rooms.model_validate(room, from_attributes=True) for room in result.scalars().all()]
 
-    async def delete_room(self, hotel_id, room_id):
+    async def delete_room(self, hotel_id, room_id) -> None:
         stmt = (delete(self.model)
                 .where(self.model
                        .hotel_id == hotel_id)
                 .where(self.model.id == room_id))
         await self.session.execute(stmt)
-        await self.session.commit()
-        return {'status': f'The room with id #{room_id} in hotel #{hotel_id} has been deleted'}
 
     async def get_hotel_rooms(self, hotel_id: int):
         stmt = select(self.model).where(self.model.hotel_id == hotel_id)
@@ -44,7 +42,7 @@ class RoomsRepos(BaseRepos):
         rooms = rooms.scalars().all()
         return rooms
 
-    async def edit(self, hotel_id, rooms_id, data: BaseModel, unset: bool = False):
+    async def edit(self, hotel_id, rooms_id, data: BaseModel, unset: bool = False) -> None:
         stmt = (
             update(self.model)
             .where(self.model.hotel_id == hotel_id)
@@ -52,7 +50,6 @@ class RoomsRepos(BaseRepos):
             .values(data.model_dump(exclude_unset=unset))
         )
         await self.session.execute(stmt)
-        await self.session.commit()
-        return {'status': f'datas in Hotel #{hotel_id} are updated'}
+
 
 

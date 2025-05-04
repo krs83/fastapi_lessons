@@ -27,7 +27,6 @@ class BaseRepos:
     async def add(self, data: BaseModel):
         add_smth = insert(self.model).values(**data.model_dump()).returning(self.model)
         res = await self.session.execute(add_smth)
-        await self.session.commit()
         model = res.scalars().one()
         return self.schema.model_validate(model, from_attributes=True)
 

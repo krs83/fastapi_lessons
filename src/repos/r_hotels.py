@@ -40,18 +40,15 @@ class HotelsRepos(BaseRepos):
     async def add(self, hotel_info):
         add_hotel = insert(self.model).values(**hotel_info.model_dump()).returning(self.model)
         res = await self.session.execute(add_hotel)
-        await self.session.commit()
         hotel = res.scalars().one()
         return Hotel.model_validate(hotel, from_attributes=True)
 
-    async def delete_by_id(self, hotel_id: int):
+    async def delete_by_id(self, hotel_id: int) -> None:
         await self.checking(hotel_id)
         stmt = delete(self.model).where(self.model.id == hotel_id)
         await self.session.execute(stmt)
-        await self.session.commit()
-        return {'status': f' The hotel by id #{hotel_id} has been deleted'}
 
-    async def edit(self, hotel_id, data: BaseModel, unset: bool = False):
+    async def edit(self, hotel_id, data: BaseModel, unset: bool = False) -> None:
         await self.checking(hotel_id)
         stmt = (
             update(self.model)
@@ -59,5 +56,4 @@ class HotelsRepos(BaseRepos):
             .values(data.model_dump(exclude_unset=unset))
         )
         await self.session.execute(stmt)
-        await self.session.commit()
-        return {'status': f'datas in Hotel #{hotel_id} are updated'}
+
