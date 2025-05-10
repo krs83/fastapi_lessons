@@ -51,5 +51,11 @@ class RoomsRepos(BaseRepos):
         )
         await self.session.execute(stmt)
 
+    async def get_room_price(self, room_id):
+        stmt = select(self.model).filter(self.model.id == room_id)
 
+        data = await self.session.execute(stmt)
+        data = data.scalars().one()
+        data = Rooms.model_validate(data, from_attributes=True)
+        return data.price
 
