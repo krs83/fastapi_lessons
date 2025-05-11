@@ -9,6 +9,11 @@ class BookingsRepos(BaseRepos):
     model = BookingOrm
     schema = Bookings
 
+    async def get_all(self, **by_filters):
+        query = select(self.model).filter_by(**by_filters)
+        result = await self.session.execute(query)
+        return [self.schema.model_validate(model) for model in result.scalars().all()]
+
     async def add_bookings(self,
                            data: schema,
                            user: int,
