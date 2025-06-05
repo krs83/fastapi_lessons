@@ -38,31 +38,17 @@ class RoomsRepos(BaseRepos):
                                    hotel_id,
                                    date_from: date,
                                    date_to: date):
-        """
-        !with rooms_count as(
-            select room_id , count(*) as room_booked from booking
-            where date_from <= '2025-11-20' and date_to >= '2025-07-01'
-            group by room_id
-        ),
-        """
         rooms_count = (
             select(BookingOrm.room_id, func.count('*').label('room_booked'))
             .select_from(BookingOrm)
             .filter(
-                BookingOrm.date_from <= date_from,
-                BookingOrm.date_to >= date_to,
+                BookingOrm.date_from <= date_to,
+                BookingOrm.date_to >= date_from,
             )
             .group_by(BookingOrm.room_id)
             .cte(name='rooms_count')
         )
 
-        """
-        rooms_left_c as (
-	        select rooms.id as room_id , quantity - coalesce(room_booked,0) as rooms_left  from rooms
-	        left join rooms_count on 
-	        rooms.id = rooms_count.room_id
-	)
-        """
         rooms_left_c = (
             select(
                 RoomsOrm.id.label('room_id'),
@@ -73,18 +59,21 @@ class RoomsRepos(BaseRepos):
             .cte('rooms_left_c')
         )
 
-        """
-        select * from rooms_left_c 
-        where rooms_left > 0
-        """
-
-        query = (
-            select(rooms_left_c)
-            .select_from(rooms_left_c)
-            .filter(rooms_left_c.c.rooms_left > 0)
+        rooms_id_for_hotel = (
+            select(RoomsOrm.id)
+            .select_from(RoomsOrm)
+            .filter_by(hotel_id=hotel_id)
+            .subquery(name='rooms_id_for_hotel')
         )
 
-        print(query.compile(bind=engine, compile_kwargs={'literal_binds': True}))
+        rooms_ids_to_get = (
+            select(rooms_left_c.c.room_id)
+            .select_from(rooms_left_c)
+            .filter(rooms_left_c.c.rooms_left > 0,
+                    rooms_left_c.c.room_id.in_(rooms_id_for_hotel)
+                    )
+        )
+        return await self.get_filtered(RoomsOrm.id.in_(rooms_ids_to_get))
 
     async def delete_room(self, hotel_id, room_id) -> None:
         stmt = (delete(self.model)
