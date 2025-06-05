@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from src.schemas.schem_bookings import BookingsAdd
-from src.api.dependency import DBDep, UserIdDep, PaginationDep
+from src.api.dependency import DBDep, UserIdDep
 
 router = APIRouter(prefix='/bookings', tags=['Бронирование'])
 

@@ -1,4 +1,9 @@
+from datetime import date
+
 from pydantic import BaseModel
+
+from src.database import engine
+from src.models.m_booking import BookingOrm
 
 from src.models.m_rooms import RoomsOrm
 from src.repos.base import BaseRepos
@@ -29,6 +34,58 @@ class RoomsRepos(BaseRepos):
         result = await self.session.execute(query)
         return [Rooms.model_validate(room, from_attributes=True) for room in result.scalars().all()]
 
+    async def get_filtered_by_time(self,
+                                   hotel_id,
+                                   date_from: date,
+                                   date_to: date):
+        """
+        !with rooms_count as(
+            select room_id , count(*) as room_booked from booking
+            where date_from <= '2025-11-20' and date_to >= '2025-07-01'
+            group by room_id
+        ),
+        """
+        rooms_count = (
+            select(BookingOrm.room_id, func.count('*').label('room_booked'))
+            .select_from(BookingOrm)
+            .filter(
+                BookingOrm.date_from <= date_from,
+                BookingOrm.date_to >= date_to,
+            )
+            .group_by(BookingOrm.room_id)
+            .cte(name='rooms_count')
+        )
+
+        """
+        rooms_left_c as (
+	        select rooms.id as room_id , quantity - coalesce(room_booked,0) as rooms_left  from rooms
+	        left join rooms_count on 
+	        rooms.id = rooms_count.room_id
+	)
+        """
+        rooms_left_c = (
+            select(
+                RoomsOrm.id.label('room_id'),
+                (RoomsOrm.quantity - func.coalesce(rooms_count.c.room_booked, 0)).label('rooms_left'),
+            )
+            .select_from(RoomsOrm)
+            .outerjoin(rooms_count, RoomsOrm.id == rooms_count.c.room_id)
+            .cte('rooms_left_c')
+        )
+
+        """
+        select * from rooms_left_c 
+        where rooms_left > 0
+        """
+
+        query = (
+            select(rooms_left_c)
+            .select_from(rooms_left_c)
+            .filter(rooms_left_c.c.rooms_left > 0)
+        )
+
+        print(query.compile(bind=engine, compile_kwargs={'literal_binds': True}))
+
     async def delete_room(self, hotel_id, room_id) -> None:
         stmt = (delete(self.model)
                 .where(self.model
@@ -58,4 +115,3 @@ class RoomsRepos(BaseRepos):
         data = data.scalars().one()
         data = Rooms.model_validate(data, from_attributes=True)
         return data.price
-
