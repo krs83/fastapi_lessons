@@ -27,7 +27,7 @@ async def get_rooms_from_hotel(hotel_id: int,
                                db: DBDep,
                                date_to: date = Query(example='2025-07-01'),
                                date_from: date = Query(example='2025-11-18')):
-    return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_from=date_from, date_to=date_to)
+    return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_to=date_to, date_from=date_from)
 
 
 @router.post('/{hotel_id}/rooms')

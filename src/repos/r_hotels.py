@@ -1,9 +1,13 @@
+from datetime import date
+
 from pydantic import BaseModel
 
 from src.models.m_hotels import HotelsOrm
+from src.models.m_rooms import RoomsOrm
 from src.repos.base import BaseRepos
 from sqlalchemy import select, insert, delete, func, update
 
+from src.repos.utils import rooms_ids_for_booking
 from src.schemas.schem_hotels import Hotel
 
 
@@ -31,6 +35,19 @@ class HotelsRepos(BaseRepos):
         result = await self.session.execute(query)
         return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
 
+    async def get_filtered_by_time(
+            self,
+            date_to: date,
+            date_from: date
+    ):
+        rooms_ids_to_get = rooms_ids_for_booking(date_to, date_from)
+        hotels_ids_to_get = (
+            select(RoomsOrm.hotel_id)
+            .select_from(RoomsOrm)
+            .filter(RoomsOrm.id.in_(rooms_ids_to_get))
+        )
+        return await self.get_filtered(HotelsOrm.id.in_(hotels_ids_to_get))
+
     async def get_hotel(self, hotel_id: int):
         stmt = select(self.model).where(self.model.id == hotel_id)
         hotel = await self.session.execute(stmt)
@@ -56,4 +73,3 @@ class HotelsRepos(BaseRepos):
             .values(data.model_dump(exclude_unset=unset))
         )
         await self.session.execute(stmt)
-
