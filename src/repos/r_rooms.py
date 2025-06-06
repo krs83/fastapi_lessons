@@ -36,14 +36,14 @@ class RoomsRepos(BaseRepos):
 
     async def get_filtered_by_time(self,
                                    hotel_id,
-                                   date_from: date,
-                                   date_to: date):
+                                   date_to: date,
+                                   date_from: date):
         rooms_count = (
             select(BookingOrm.room_id, func.count('*').label('room_booked'))
             .select_from(BookingOrm)
             .filter(
-                BookingOrm.date_from <= date_to,
-                BookingOrm.date_to >= date_from,
+                BookingOrm.date_to <= date_from,
+                BookingOrm.date_from >= date_to,
             )
             .group_by(BookingOrm.room_id)
             .cte(name='rooms_count')
