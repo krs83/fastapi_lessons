@@ -35,11 +35,17 @@ class BaseRepos:
 
     async def add(self, data: BaseModel):
         add_smth = insert(self.model).values(**data.model_dump()).returning(self.model)
+        print('*****************')
+        print(add_smth)
         res = await self.session.execute(add_smth)
         model = res.scalars().one()
         return self.schema.model_validate(model, from_attributes=True)
 
-    async def edit(self, hotel_id, room_id, data: BaseModel,):
+    async def add_bulk(self, data: list[BaseModel]):
+        add_smth = insert(self.model).values([item.model_dump() for item in data])
+        await self.session.execute(add_smth)
+
+    async def edit(self, hotel_id, room_id, data: BaseModel):
         stmt = (
                 update(self.model)
                 .where(self.model)

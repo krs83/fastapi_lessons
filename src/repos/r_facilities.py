@@ -2,10 +2,10 @@ from datetime import date
 
 from pydantic import BaseModel
 
-from src.models.m_facilities import FacilitiesOrm
+from src.models.m_facilities import FacilitiesOrm, RoomsFacilitiesOrm
 from src.repos.base import BaseRepos
-from src.schemas.schem_facilities import Facilities
-from sqlalchemy import delete, select, func, update
+from src.schemas.schem_facilities import Facilities, RoomsFacilities
+from sqlalchemy import delete, select, func, update, insert
 
 
 class FacilitiesRepos(BaseRepos):
@@ -27,5 +27,29 @@ class FacilitiesRepos(BaseRepos):
         await self.session.execute(stmt)
 
 
+class RoomsFacilitiesRepos(BaseRepos):
+    model = RoomsFacilitiesOrm
+    schema = RoomsFacilities
 
+    async def edit_bulk(self, rooms_id, data: list[BaseModel]) -> None:
+        new_facility_ids = {f.facility_id for f in data}
+        current_facility_ids = await self.get_filtered(room_id=rooms_id)
+        current_facility_ids = {f.facility_id for f in current_facility_ids}
 
+        to_remove = current_facility_ids - new_facility_ids
+        to_add = new_facility_ids - current_facility_ids
+
+        if to_remove:
+            stmt = (
+                delete(self.model)
+                .where(self.model.room_id == rooms_id)
+                .where(self.model.facility_id.in_(to_remove))
+            )
+            await self.session.execute(stmt)
+
+        if to_add:
+            stmt = (
+                insert(self.model)
+                .values([{"room_id": rooms_id, "facility_id": fid} for fid in to_add])
+            )
+            await self.session.execute(stmt)
