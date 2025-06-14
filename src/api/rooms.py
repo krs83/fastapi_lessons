@@ -31,6 +31,11 @@ async def get_rooms_from_hotel(hotel_id: int,
     return await db.rooms.get_filtered_by_time(hotel_id=hotel_id, date_to=date_to, date_from=date_from)
 
 
+@router.get('/{hotel_id}/rooms/{room_id}')
+async def get_room(hotel_id: int, room_id: int, db: DBDep):
+    return await db.rooms.get_one_or_none(id=room_id, hotel_id=hotel_id)
+
+
 @router.post('/{hotel_id}/rooms')
 async def create_rooms(
         hotel_id: int,
