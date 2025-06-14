@@ -6,7 +6,7 @@ from src.models.m_rooms import RoomsOrm
 from src.repos.base import BaseRepos
 from src.repos.utils import rooms_ids_for_booking
 from src.schemas.schem_rooms import Rooms, RoomsWithRels
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 from sqlalchemy import delete, select, func, update
 
 
@@ -48,6 +48,20 @@ class RoomsRepos(BaseRepos):
         result = await self.session.execute(query)
 
         return [RoomsWithRels.model_validate(model) for model in result.scalars().all()]
+
+    async def get_one_or_none(self, **by_filters):
+        query = (
+            select(self.model)
+            .options(selectinload(self.model.facilities))
+            .filter_by(**by_filters)
+
+        )
+        result = await self.session.execute(query)
+
+        model = result.scalars().one_or_none()
+        if model is None:
+            return None
+        return RoomsWithRels.model_validate(model)
 
     async def delete_room(self, hotel_id, room_id) -> None:
         stmt = (delete(self.model)

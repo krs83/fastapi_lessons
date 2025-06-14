@@ -1,9 +1,6 @@
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, insert, delete, update
-from sqlalchemy.orm import selectinload
-
-from src.schemas.schem_rooms import RoomsWithRels
 
 
 class BaseRepos:
@@ -28,18 +25,13 @@ class BaseRepos:
         return [self.schema.model_validate(model) for model in result.scalars().all()]
 
     async def get_one_or_none(self, **by_filters):
-        query = (
-            select(self.model)
-            .options(selectinload(self.model.facilities))
-            .filter_by(**by_filters)
-
-        )
+        query = select(self.model).filter_by(**by_filters)
         result = await self.session.execute(query)
-
+        await self.session.commit()
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return RoomsWithRels.model_validate(model)
+        return self.schema.model_validate(model)
 
     async def add(self, data: BaseModel):
         add_smth = insert(self.model).values(**data.model_dump()).returning(self.model)
