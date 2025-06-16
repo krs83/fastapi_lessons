@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class FacilitiesAdd(BaseModel):
@@ -20,7 +20,6 @@ class RoomsFacilitiesAdd(BaseModel):
     facility_id: int
 
 
-
 class RoomsFacilities(RoomsFacilitiesAdd):
     id: int
 
@@ -31,4 +30,6 @@ class RoomsFacilitiesPut(BaseModel):
     facility_id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
 

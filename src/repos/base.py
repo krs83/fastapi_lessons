@@ -2,10 +2,13 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, insert, delete, update
 
+from src.repos.mappers.base import DataMapper
+
 
 class BaseRepos:
     model = None
     schema: BaseModel = None
+    mapper: DataMapper = None
 
     def __init__(self, session):
         self.session = session
@@ -13,7 +16,7 @@ class BaseRepos:
     async def get_all(self, *args, **kwargs):
         query = select(self.model)
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
 
     async def get_filtered(self, *filter, **filter_by):
         query = (
@@ -22,6 +25,7 @@ class BaseRepos:
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
+        print(f"Mapper type: {type(self.mapper)}")
         return [self.schema.model_validate(model) for model in result.scalars().all()]
 
     async def get_one_or_none(self, **by_filters):
@@ -31,15 +35,14 @@ class BaseRepos:
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return self.schema.model_validate(model)
+        return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel):
         add_smth = insert(self.model).values(**data.model_dump()).returning(self.model)
-        print('*****************')
-        print(add_smth)
         res = await self.session.execute(add_smth)
+        await self.session.commit()
         model = res.scalars().one()
-        return self.schema.model_validate(model, from_attributes=True)
+        return self.mapper.map_to_domain_entity(model)
 
     async def add_bulk(self, data: list[BaseModel]):
         add_smth = insert(self.model).values([item.model_dump() for item in data])

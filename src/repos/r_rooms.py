@@ -4,15 +4,16 @@ from pydantic import BaseModel
 
 from src.models.m_rooms import RoomsOrm
 from src.repos.base import BaseRepos
+from src.repos.mappers.mappers import RoomDataMapper, RoomWithResDataMapper
 from src.repos.utils import rooms_ids_for_booking
-from src.schemas.schem_rooms import Rooms, RoomsWithRels
+from src.schemas.schem_rooms import Rooms
 from sqlalchemy.orm import selectinload
 from sqlalchemy import delete, select, func, update
 
 
 class RoomsRepos(BaseRepos):
     model = RoomsOrm
-    schema = Rooms
+    mapper = RoomDataMapper
 
     async def get_all(self,
                       title,
@@ -31,7 +32,7 @@ class RoomsRepos(BaseRepos):
             query = query.filter(RoomsOrm.quantity == quantity)
 
         result = await self.session.execute(query)
-        return [Rooms.model_validate(room, from_attributes=True) for room in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(room) for room in result.scalars().all()]
 
     async def get_filtered_by_time(self,
                                    hotel_id,
@@ -47,7 +48,7 @@ class RoomsRepos(BaseRepos):
 
         result = await self.session.execute(query)
 
-        return [RoomsWithRels.model_validate(model) for model in result.scalars().all()]
+        return [RoomWithResDataMapper.map_to_domain_entity(model) for model in result.scalars().all()]
 
     async def get_one_or_none(self, **by_filters):
         query = (
@@ -61,7 +62,7 @@ class RoomsRepos(BaseRepos):
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return RoomsWithRels.model_validate(model)
+        return RoomWithResDataMapper.map_to_domain_entity(model)
 
     async def delete_room(self, hotel_id, room_id) -> None:
         stmt = (delete(self.model)
@@ -90,5 +91,5 @@ class RoomsRepos(BaseRepos):
 
         data = await self.session.execute(stmt)
         data = data.scalars().one()
-        data = Rooms.model_validate(data, from_attributes=True)
+        data = self.mapper.map_to_domain_entity(data)
         return data.price

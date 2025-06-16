@@ -1,16 +1,15 @@
-from datetime import date
-
 from pydantic import BaseModel
 
 from src.models.m_facilities import FacilitiesOrm, RoomsFacilitiesOrm
 from src.repos.base import BaseRepos
-from src.schemas.schem_facilities import Facilities, RoomsFacilities
-from sqlalchemy import delete, select, func, update, insert
+from src.repos.mappers.mappers import FacilityDataMapper
+from src.schemas.schem_facilities import RoomsFacilities
+from sqlalchemy import delete, update, insert
 
 
 class FacilitiesRepos(BaseRepos):
     model = FacilitiesOrm
-    schema = Facilities
+    mapper = FacilityDataMapper
 
     async def edit_facility(self, facility_id, data: BaseModel) -> None:
         await self.checking(facility_id)

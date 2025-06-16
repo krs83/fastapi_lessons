@@ -7,13 +7,13 @@ from src.models.m_rooms import RoomsOrm
 from src.repos.base import BaseRepos
 from sqlalchemy import select, insert, delete, func, update
 
+from src.repos.mappers.mappers import HotelDataMapper
 from src.repos.utils import rooms_ids_for_booking
-from src.schemas.schem_hotels import Hotel
 
 
 class HotelsRepos(BaseRepos):
     model = HotelsOrm
-    schema = Hotel
+    mapper = HotelDataMapper
 
     async def get_filtered_by_time(
             self,
@@ -61,7 +61,7 @@ class HotelsRepos(BaseRepos):
         add_hotel = insert(self.model).values(**hotel_info.model_dump()).returning(self.model)
         res = await self.session.execute(add_hotel)
         hotel = res.scalars().one()
-        return Hotel.model_validate(hotel, from_attributes=True)
+        return self.mapper.map_to_domain_entity(hotel)
 
     async def delete_by_id(self, hotel_id: int) -> None:
         await self.checking(hotel_id)

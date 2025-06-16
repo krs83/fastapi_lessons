@@ -14,8 +14,8 @@ async def get_hotels(
         db: DBDep,
         title: str | None = Query(None),
         location: str | None = Query(None),
-        date_to: date = Query(example='2025-07-01'),
-        date_from: date = Query(example='2025-11-18')
+        date_to: date = Query(example='2025-11-20'),
+        date_from: date = Query(example='2025-07-01')
 ):
     offset = (pagination.page - 1) * pagination.per_page
     limit = pagination.per_page
@@ -45,14 +45,6 @@ async def create_hotel(
     return hotel_data
 
 
-@router.delete('/{hotel_id}')
-async def delete_hotel(hotel_id: int,
-                       db: DBDep):
-    await db.hotels.delete_by_id(hotel_id)
-    await db.commit()
-    return {'status': f' The hotel by id #{hotel_id} has been deleted'}
-
-
 @router.patch('/{hotel_id}')
 async def part_update_hotel(
         hotel_id: int,
@@ -75,3 +67,11 @@ async def full_update_hotel(
                          unset=False)
     await db.commit()
     return {'status': f'datas in Hotel #{hotel_id} are updated'}
+
+
+@router.delete('/{hotel_id}')
+async def delete_hotel(hotel_id: int,
+                       db: DBDep):
+    await db.hotels.delete_by_id(hotel_id)
+    await db.commit()
+    return {'status': f' The hotel by id #{hotel_id} has been deleted'}

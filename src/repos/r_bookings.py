@@ -2,20 +2,20 @@ from sqlalchemy import insert, select, desc
 
 from src.models.m_booking import BookingOrm
 from src.repos.base import BaseRepos
-from src.schemas.schem_bookings import Bookings
+from src.repos.mappers.mappers import BookingDataMapper
 
 
 class BookingsRepos(BaseRepos):
     model = BookingOrm
-    schema = Bookings
+    mapper = BookingDataMapper
 
     async def get_all(self, **by_filters):
         query = select(self.model).filter_by(**by_filters)
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
 
     async def add_bookings(self,
-                           data: schema,
+                           data: mapper.schema,
                            user: int,
                            price: int):
         add_booking = (

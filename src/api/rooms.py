@@ -69,7 +69,7 @@ async def full_update_hotel_room(
                        )
 
     rooms_facilities_data = [RoomsFacilitiesPut(facility_id=f_id) for f_id in room_data.facilities_ids]
-    await db.rooms_facilities.edit_bulk(rooms_id=rooms_id, data=rooms_facilities_data, unset=False)
+    await db.rooms_facilities.edit_bulk(rooms_id=rooms_id, data=rooms_facilities_data)
     await db.commit()
     return {'status': f'room data in Hotel #{hotel_id} are updated'}
 
